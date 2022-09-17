@@ -1,27 +1,28 @@
-import compression from "compression";
-import cors from "cors";
+import { ApolloServer, gql } from "apollo-server-express";
 import express from "express";
-import { graphqlHTTP } from "express-graphql";
-import expressRateLimit from "express-rate-limit";
-import { buildSchema } from "graphql";
-import morgan from "morgan";
-import path from "path";
-import { corsOptions } from "./config/cors";
-import passport from "./lib/passport";
-import handleError from "./middleware/handleError";
-import router from "./routes/api";
+import http from "node:http";
+import { usersResolver } from "./resolvers/users.resolver";
 
 // Construct a schema, using GraphQL schema language
-var schema = buildSchema(`
+var schema = gql(`
+  interface Node {
+    id: ID!
+  }
+
+  type User implements Node {
+    id: ID!
+    name: String
+  }
+
+
   type Query {
-    hello: String
+    users: [User!]!
   }
 `);
 
-// The root provides a resolver function for each API endpoint
-var root = {
-  hello: () => {
-    return "Hello world!";
+const resolvers = {
+  Query: {
+    users: () => usersResolver(),
   },
 };
 
@@ -30,36 +31,23 @@ var root = {
  *
  * @return
  */
-(async function bootstrap() {
+(async () => {
   const app = express();
 
-  app.set("PORT", process.env.PORT || 3001);
+  const httpServer = http.createServer(app);
 
-  app.use(
-    express.static(path.join(__dirname, "public"), { maxAge: 31557600000 })
-  );
-
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: false }));
-  app.use(expressRateLimit({ windowMs: 60 * 1000, max: 30 }));
-  app.use(morgan("common"));
-  app.use(compression());
-  app.use(passport.initialize());
-  // app.use(helmet());
-  app.use(cors(corsOptions));
-  app.use("/api", router);
-  app.use(handleError);
-
-  app.use(
-    "/graphql",
-    graphqlHTTP({
-      schema: schema,
-      rootValue: root,
-      graphiql: true,
-    })
-  );
-
-  app.listen(app.get("PORT"), () => {
-    console.log(`Server is running on PORT:${app.get("PORT")}`);
+  const server = new ApolloServer({
+    typeDefs: schema,
+    resolvers: [resolvers],
+    csrfPrevention: true,
   });
+
+  await server.start();
+
+  server.applyMiddleware({ app });
+
+  await new Promise<void>((resolve) =>
+    httpServer.listen({ port: 3001 }, resolve)
+  );
+  console.log(`🚀 Server ready at http://localhost:3001${server.graphqlPath}`);
 })();
