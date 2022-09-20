@@ -4,7 +4,7 @@ import http from "node:http";
 import { usersResolver } from "./resolvers/users.resolver";
 
 // Construct a schema, using GraphQL schema language
-var schema = gql(`
+const schema = gql(`
   interface Node {
     id: ID!
   }
