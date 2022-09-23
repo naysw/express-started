@@ -4,5 +4,12 @@ interface Node {
 
 type User implements Node {
   id: ID!
-  title: String
+  firstName: String
+  lastName: String
+  email: String!
+  password: String!
+}
+
+type Query {
+  users: [User!]!
 }

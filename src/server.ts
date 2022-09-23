@@ -1,30 +1,9 @@
-import { ApolloServer, gql } from "apollo-server-express";
+import { ApolloServer } from "apollo-server-express";
 import express from "express";
 import http from "node:http";
-import { usersResolver } from "./resolvers/users.resolver";
-
-// Construct a schema, using GraphQL schema language
-const schema = gql(`
-  interface Node {
-    id: ID!
-  }
-
-  type User implements Node {
-    id: ID!
-    name: String
-  }
-
-
-  type Query {
-    users: [User!]!
-  }
-`);
-
-const resolvers = {
-  Query: {
-    users: () => usersResolver(),
-  },
-};
+import "reflect-metadata";
+import { buildSchema } from "type-graphql";
+import { UserResolver } from "./resolvers/users.resolver";
 
 /**
  * bootstrap application
@@ -36,9 +15,12 @@ const resolvers = {
 
   const httpServer = http.createServer(app);
 
+  const schema = await buildSchema({
+    resolvers: [UserResolver],
+  });
+
   const server = new ApolloServer({
-    typeDefs: schema,
-    resolvers: [resolvers],
+    schema,
     csrfPrevention: true,
   });
 
