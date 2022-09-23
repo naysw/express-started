@@ -11,5 +11,5 @@ type User implements Node {
 }
 
 type Query {
-  users: [User!]!
+  users(take: Int, skip: Int): [User!]!
 }

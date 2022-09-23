@@ -27,6 +27,17 @@ export type Query = {
   users: Array<User>;
 };
 
+
+@TypeGraphQL.ArgsType()
+export class QueryUsersArgs {
+
+  @TypeGraphQL.Field(type => TypeGraphQL.Int, { nullable: true })
+  skip?: Maybe<Scalars['Int']>;
+
+  @TypeGraphQL.Field(type => TypeGraphQL.Int, { nullable: true })
+  take?: Maybe<Scalars['Int']>;
+};
+
 @TypeGraphQL.ObjectType({ implements: Node })
 export class User extends Node {
   __typename?: 'User';
