@@ -1,9 +1,10 @@
+import { ApolloServerPluginLandingPageLocalDefault } from "apollo-server-core";
 import { ApolloServer } from "apollo-server-express";
 import express from "express";
 import http from "node:http";
 import "reflect-metadata";
-import { buildSchema } from "type-graphql";
-import { UserResolver } from "./resolvers/users.resolver";
+import { usersResolver } from "./resolvers/users.resolver";
+import { typeDefs } from "./typeDefs";
 
 /**
  * bootstrap application
@@ -15,13 +16,19 @@ import { UserResolver } from "./resolvers/users.resolver";
 
   const httpServer = http.createServer(app);
 
-  const schema = await buildSchema({
-    resolvers: [UserResolver],
-  });
-
   const server = new ApolloServer({
-    schema,
+    typeDefs,
+    resolvers: {
+      Query: {
+        users: usersResolver,
+      },
+    },
     csrfPrevention: true,
+    plugins: [
+      ApolloServerPluginLandingPageLocalDefault({
+        embed: true,
+      }),
+    ],
   });
 
   await server.start();
